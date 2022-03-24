@@ -1,9 +1,10 @@
-from typing import Callable, TypedDict, List, Literal, Union
+from typing import Callable, TypeVar, TypedDict, List, Literal, Union
 
 SubscribesType = Union[Literal['UPDATE_STATE'], Literal['test']]
 SubscriberFunction = Callable[..., None]
 Subscriber = TypedDict(
     'Subscriber', {'type': SubscribesType, 'subscribers': List[SubscriberFunction]})
+T = TypeVar('T')
 
 
 constants = ('UPDATE_STATE')
@@ -36,6 +37,16 @@ class Observer:
             subject = observers[0]
             subscribers = subject['subscribers']
             subscribers.remove(fn)
+
+    def notify(self, subscription_type: SubscribesType, data: T) -> None:
+        observers = self._find_subs(subscription_type)
+
+        if len(observers) > 0:
+            subject = observers[0]
+            subscribers = subject['subscribers']
+            
+            for subscriber in subscribers:
+                subscriber(data)
 
     def _find_subs(self, subscription_type: SubscribesType) -> list[Subscriber]:
         if subscription_type in constants:
