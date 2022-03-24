@@ -1,13 +1,15 @@
-from typing import Callable, TypeVar, TypedDict, List, Literal, Union
+from typing import Callable, TypeVar, TypedDict, List
+from modules.utils.constants import OBSERVER_MESSAGES, SubscribesType
 
-SubscribesType = Union[Literal['UPDATE_STATE'], Literal['test']]
 SubscriberFunction = Callable[..., None]
 Subscriber = TypedDict(
-    'Subscriber', {'type': SubscribesType, 'subscribers': List[SubscriberFunction]})
+    'Subscriber',
+    {
+        'type': SubscribesType,
+        'subscribers': List[SubscriberFunction]
+    }
+)
 T = TypeVar('T')
-
-
-constants = ('UPDATE_STATE')
 
 
 def get_subscribers_by_type(subscription_type: SubscribesType) -> Callable[[Subscriber], bool]:
@@ -44,15 +46,18 @@ class Observer:
         if len(observers) > 0:
             subject = observers[0]
             subscribers = subject['subscribers']
-            
+
             for subscriber in subscribers:
                 subscriber(data)
 
     def _find_subs(self, subscription_type: SubscribesType) -> list[Subscriber]:
-        if subscription_type in constants:
+        subs_types = list(OBSERVER_MESSAGES.values())
+
+        if subscription_type in subs_types:
             matches = filter(get_subscribers_by_type(
                 subscription_type), self._observers)
             return list(matches)
         else:
             raise Exception(
-                f'Not valid subscription_type\n Correct types: {constants}\n Incoming type: {subscription_type}')
+                f'Not valid subscription_type\n Correct types: {subs_types}\n Incoming type: {subscription_type}'
+            )
