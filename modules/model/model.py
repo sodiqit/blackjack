@@ -4,12 +4,14 @@ import os
 from io import StringIO
 
 from modules.observer.observer import Observer
+from modules.utils.constants import generate_deck, Deck
 
 
 class Model(Observer):
     _history_file_path = ''
     _media_path = ''
     _current_game = None
+    _deck: Deck = []
 
     def __init__(self) -> None:
         super().__init__()
@@ -24,7 +26,7 @@ class Model(Observer):
 
         self._check_history_file()
 
-        print(self._current_game)
+        self._deck = generate_deck()
 
     def _check_history_file(self) -> None:
         if os.path.isfile(self._history_file_path):

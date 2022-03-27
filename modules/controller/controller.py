@@ -11,5 +11,4 @@ class Controller:
         self.view.start_game()
 
     def bind_deps(self) -> None:
-        print('Bind deps')
         self.view.subscribe(OBSERVER_MESSAGES['init'], self.model.start)
