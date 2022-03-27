@@ -8,8 +8,8 @@ class Controller:
         self.model = model
         self.view = view
         self.bind_deps()
-        self.model.start()
+        self.view.start_game()
 
     def bind_deps(self) -> None:
         print('Bind deps')
-        self.model.subscribe(OBSERVER_MESSAGES['init'], self.view.start_game)
+        self.view.subscribe(OBSERVER_MESSAGES['init'], self.model.start)
