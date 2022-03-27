@@ -1,10 +1,11 @@
-from uuid import uuid4
+import random
 import json
 import os
+from uuid import uuid4
 from io import StringIO
 
 from modules.observer.observer import Observer
-from modules.utils.constants import generate_deck, Deck
+from modules.utils.constants import OBSERVER_MESSAGES, generate_deck, Deck
 
 
 class Model(Observer):
@@ -25,8 +26,14 @@ class Model(Observer):
             os.makedirs(self._media_path)
 
         self._check_history_file()
-
         self._deck = generate_deck()
+
+        self._shuffle_cards()
+
+    def _shuffle_cards(self) -> None:
+        for i in range(1, random.randint(10, 30)):
+            random.shuffle(self._deck)
+        self.notify(OBSERVER_MESSAGES['deck_init'], self._deck)
 
     def _check_history_file(self) -> None:
         if os.path.isfile(self._history_file_path):
