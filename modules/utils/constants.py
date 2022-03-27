@@ -5,10 +5,10 @@ ObserverMessages = TypedDict(
     'ObserverMessages',
     {
         'init': Literal['INIT'],
-        'update_state': Literal['UPDATE_STATE']
+        'deck_init': Literal['DECK_INIT']
     }
 )
-SubscribesType = Union[Literal['UPDATE_STATE'], Literal['INIT']]
+SubscribesType = Union[Literal['DECK_INIT'], Literal['INIT']]
 
 CardTypes = Union[
     Literal['ace'],
@@ -40,7 +40,7 @@ Deck = list[Card]
 
 OBSERVER_MESSAGES: ObserverMessages = {
     'init': 'INIT',
-    'update_state': 'UPDATE_STATE'
+    'deck_init': 'DECK_INIT'
 }
 
 CARDS: dict[CardTypes, str] = {
