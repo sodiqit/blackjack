@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar, TypedDict, List
+from typing import Callable, Optional, TypeVar, TypedDict, List
 from modules.utils.constants import OBSERVER_MESSAGES, SubscribesType
 
 SubscriberFunction = Callable[..., None]
@@ -40,7 +40,7 @@ class Observer:
             subscribers = subject['subscribers']
             subscribers.remove(fn)
 
-    def notify(self, subscription_type: SubscribesType, data: T) -> None:
+    def notify(self, subscription_type: SubscribesType, data: Optional[T] = None) -> None:
         observers = self._find_subs(subscription_type)
 
         if len(observers) > 0:
@@ -48,7 +48,10 @@ class Observer:
             subscribers = subject['subscribers']
 
             for subscriber in subscribers:
-                subscriber(data)
+                if data is None:
+                    subscriber()
+                else:
+                    subscriber(data)
 
     def _find_subs(self, subscription_type: SubscribesType) -> list[Subscriber]:
         subs_types = list(OBSERVER_MESSAGES.values())
