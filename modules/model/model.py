@@ -35,6 +35,7 @@ Game = TypedDict(
 TODO: Add method for calculation scores for computer and player;
       Add sync history file with change game state;
       Add handle exceptions and if game crash, take last state and continue game;
+      Relocate deck into game state;
 '''
 
 class Model(Observer):
