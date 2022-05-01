@@ -1,33 +1,39 @@
-from typing import Optional
-from typing_extensions import TypedDict
+import inquirer
 from modules.model.model import Game
 from modules.observer.observer import Observer
-from modules.utils.constants import OBSERVER_MESSAGES, Deck
-
-GamePayload = TypedDict(
-    'GamePayload',
-    {
-        'game': Game,
-        'deck': Deck,
-    }
-)
+from modules.utils.constants import CARDS, OBSERVER_MESSAGES, SUITS, Card
 
 
 class View(Observer):
-    _game: Optional[Game] = None
-    _deck: Deck = []
-
     def start_game(self) -> None:
-        print('Приветствую! Готов сыграть в Blackjack?')
-        input('Нажми любую кнопку чтобы продолжить: ') # TODO: refactor for choices. Not input
+        answer = self._create_prompt(
+            'continue',
+            message='Приветствую! Готов сыграть в Blackjack?',
+            choices=['Да', 'Нет']
+        )
+        if answer['continue'] == 'Нет':
+            exit()
         self.notify(OBSERVER_MESSAGES['init'])
 
-    def init_game(self, game_payload: GamePayload) -> None:
-        self._game = game_payload['game']
-        self._deck = game_payload['deck']
+    def render(self, game: Game) -> None:
+        print(self._get_game_info_message(game))
 
-        print(
-            f"\nКоличество карт у компьютера: {len(game_payload['game']['state']['computer_cards'])} | " 
-            f"Ваше количество очков: {game_payload['game']['state']['human_score']}"
+        answer = self._create_prompt(
+            'action',
+            message='Ваше действие',
+            choices=['Взять карту', 'Пас']
         )
-        answer = input('Взять карту') # TODO: add menu for choices 
+
+        self.notify(OBSERVER_MESSAGES['user_action'], answer)
+
+    def _get_game_info_message(self, game: Game) -> str:
+        user_cards = game['state']['human_cards']
+        return f"\nКоличество карт у компьютера: {len(game['state']['computer_cards'])}" + " | " + f"Ваше количество очков: {game['state']['human_score']}" + " | " + f"Ваши карты: {', '.join([self.get_card_info(card) for card in user_cards])}"
+
+    def get_card_info(self, card: Card) -> str:
+        return f"'{CARDS[card['type']]} {SUITS[card['suit']]}'"
+
+    def _create_prompt(self, key: str, message: str = '', choices: list = []) -> dict:
+        questions = [inquirer.List(key, message=message, choices=choices)]
+        answer = inquirer.prompt(questions)
+        return answer
