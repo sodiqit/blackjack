@@ -1,14 +1,18 @@
 from typing import Literal, Union, TypedDict
 
-
 ObserverMessages = TypedDict(
     'ObserverMessages',
     {
         'init': Literal['INIT'],
-        'game_init': Literal['GAME_INIT']
+        'user_action': Literal['USER_ACTION'],
+        'change_state': Literal['CHANGE_STATE'],
     }
 )
-SubscribesType = Union[Literal['GAME_INIT'], Literal['INIT']]
+SubscribesType = Union[
+    Literal['INIT'],
+    Literal['USER_ACTION'],
+    Literal['CHANGE_STATE']
+]
 
 CardTypes = Union[
     Literal['ace'],
@@ -26,7 +30,12 @@ CardTypes = Union[
     Literal['2']
 ]
 
-SuitTypes = Union[Literal['diamonds'], Literal['hearts'], Literal['spades'], Literal['clubs']]
+SuitTypes = Union[
+    Literal['diamonds'],
+    Literal['hearts'],
+    Literal['spades'],
+    Literal['clubs']
+]
 
 Card = TypedDict(
     'Card',
@@ -40,7 +49,8 @@ Deck = list[Card]
 
 OBSERVER_MESSAGES: ObserverMessages = {
     'init': 'INIT',
-    'game_init': 'GAME_INIT'
+    'user_action': 'USER_ACTION',
+    'change_state': 'CHANGE_STATE',
 }
 
 CARDS: dict[CardTypes, str] = {

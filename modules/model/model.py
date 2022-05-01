@@ -17,6 +17,7 @@ State = TypedDict(
         'human_cards': list[Card],
         'human_score': int,
         'computer_score': int,
+        'deck': Deck,
     }
 )
 
@@ -31,12 +32,20 @@ Game = TypedDict(
     }
 )
 
+ChangeStatePayload = TypedDict(
+    'ChangeStatePayload',
+    {
+        'action': Literal['Взять карту'] | Literal['Пас']
+    }
+)
+
 ''' 
 TODO: Add method for calculation scores for computer and player;
       Add sync history file with change game state;
       Add handle exceptions and if game crash, take last state and continue game;
       Relocate deck into game state;
 '''
+
 
 class Model(Observer):
     _history_file_path = ''
@@ -56,20 +65,27 @@ class Model(Observer):
             os.makedirs(self._media_path)
 
         self._check_history_file()
-        self._deck = generate_deck()
+        if self._current_game:
+            self._deck = self._current_game['state']['deck']
+        else:
+            print('Не удалось получить колоду')
+            exit()
         self._shuffle_cards()
         self._add_card('computer')
         self.notify(
-            OBSERVER_MESSAGES['game_init'],
-            {
-                'game': self._current_game,
-                'deck': self._deck,
-            }
+            OBSERVER_MESSAGES['change_state'],
+            self._current_game
         )
+
+    def change_state(self, payload: ChangeStatePayload) -> None:
+        if payload['action'] == 'Взять карту':
+            self._add_card('human')
+        self._add_card('computer')
+        self.notify(OBSERVER_MESSAGES['change_state'], self._current_game)
 
     def _add_card(self, gamer_type: GamerType) -> None:
         card = self._deck.pop()
-        self._current_game['state'][f'{gamer_type}_cards'].append(card) # type: ignore
+        self._current_game['state'][f'{gamer_type}_cards'].append(card)  # type: ignore
 
     def _shuffle_cards(self) -> None:
         for i in range(1, random.randint(10, 30)):
@@ -90,6 +106,7 @@ class Model(Observer):
                     'human_cards': [],
                     'human_score': 0,
                     'computer_score': 0,
+                    'deck': generate_deck()
                 },
                 'winner': None,
                 'finished': False,
