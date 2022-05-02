@@ -39,6 +39,16 @@ class View(Observer):
             f"\nИгра окончена! Победитель: {get_winner(game['winner'])}",
             f"\nВаше количество очков: {game['state']['human_score']} | Количество очков компьютера: {game['state']['computer_score']}"
         )
+        answer = self._create_prompt(
+            'continue',
+            message='Хотите сыграть еще раз?',
+            choices=['Да', 'Нет']
+        )
+
+        if answer['continue'] == 'Нет':
+            exit()
+        self.notify(OBSERVER_MESSAGES['init'])
+            
 
     def _get_game_info_message(self, game: Game) -> str:
         user_cards = game['state']['human_cards']
