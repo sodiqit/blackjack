@@ -40,25 +40,42 @@ class Storage:
     def get_current_game(self) -> Game:
         if not os.path.isdir(self._media_path):
             os.makedirs(self._media_path)
-    
+
         if os.path.isfile(self._history_file_path):
-            with open(self._history_file_path, 'r') as file:
-                jsonData = StringIO(file.read())
-                data = json.load(jsonData)
-                last_game = data[len(data) - 1]
-                current_game = last_game
+            last_game = self._get_last_game()
+            current_game = last_game
 
-                if last_game['finished']:
-                    current_game = self._create_new_game()
-                    self.add_game_in_history(current_game)
+            if last_game['finished']:
+                current_game = self._create_new_game()
+                self.add_game_in_history(current_game)
 
-                return current_game
+            return current_game
         else:
             current_game = self._create_new_game()
             init_data = json.dumps([current_game])
 
             self._create_file(self._history_file_path, str(init_data))
             return current_game
+
+    def has_last_not_ended_game(self) -> bool:
+        if not os.path.isdir(self._media_path):
+            os.makedirs(self._media_path)
+
+        if os.path.isfile(self._history_file_path):
+            last_game = self._get_last_game()
+
+            return last_game and not last_game['finished']
+        else:
+            return False
+
+
+    def _get_last_game(self) -> Game:
+        with open(self._history_file_path, 'r') as file:
+            jsonData = StringIO(file.read())
+            data = json.load(jsonData)
+            last_game = data[len(data) - 1]
+
+            return last_game
 
     def update_game_in_history(self, updated_game: Game) -> None:
         games = self._read_history_file()

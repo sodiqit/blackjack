@@ -12,8 +12,6 @@ ChangeStatePayload = TypedDict(
     }
 )
 
-# TODO: Add handle exceptions and if game crash, take last state and continue game
-
 class Model(Observer):
     _storage: Storage
     _current_game: Game
@@ -24,19 +22,25 @@ class Model(Observer):
         self._storage = storage
 
     def start(self) -> None:
+        has_last_not_ended_game = self._storage.has_last_not_ended_game()
+
         self._current_game = self._storage.get_current_game()
         self._deck = self._current_game['state']['deck']
-        self._shuffle_cards()
-        self._add_card('computer')
+
+        if not has_last_not_ended_game:
+            self._shuffle_cards()
+            self._add_card('computer')
+            self._storage.update_game_in_history(self._current_game)
+
         self.notify(
             OBSERVER_MESSAGES['change_state'],
             self._current_game
         )
 
     def change_state(self, payload: ChangeStatePayload) -> None:
+        self._computer_move()
         if payload['action'] == 'Взять карту':
             self._add_card('human')
-        self._computer_move()
         self._calculate_score('human')
 
         self._storage.update_game_in_history(self._current_game)
