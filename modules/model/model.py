@@ -1,36 +1,9 @@
 import random
-import json
-import os
-from typing import Any, Literal, Union, Optional, TypedDict
-from uuid import uuid4
-from io import StringIO
+from typing import Literal, Optional, TypedDict
 
 from modules.observer.observer import Observer
-from modules.utils.constants import MAP_CARDS_FOR_SCORE, OBSERVER_MESSAGES, Card, generate_deck, Deck
-
-GamerType = Union[Literal['human'], Literal['computer']]
-
-State = TypedDict(
-    'State',
-    {
-        'computer_cards': list[Card],
-        'human_cards': list[Card],
-        'human_score': int,
-        'computer_score': int,
-        'deck': Deck,
-    }
-)
-
-Game = TypedDict(
-    'Game',
-    {
-        'game_uuid': str,
-        'events': list,
-        'state': State,
-        'finished': bool,
-        'winner': Optional[GamerType],
-    }
-)
+from modules.storage.storage import Game, GamerType, Storage
+from modules.utils.constants import MAP_CARDS_FOR_SCORE, OBSERVER_MESSAGES, Card, Deck
 
 ChangeStatePayload = TypedDict(
     'ChangeStatePayload',
@@ -39,36 +12,20 @@ ChangeStatePayload = TypedDict(
     }
 )
 
-''' 
-TODO: Add method for calculation scores for computer and player;
-      Add sync history file with change game state;
-      Add handle exceptions and if game crash, take last state and continue game;
-'''
-
+# TODO: Add handle exceptions and if game crash, take last state and continue game
 
 class Model(Observer):
-    _history_file_path = ''
-    _media_path = ''
+    _storage: Storage
     _current_game: Game
     _deck: Deck = []
 
-    def __init__(self) -> None:
+    def __init__(self, storage: Storage) -> None:
         super().__init__()
-        fileDir = os.path.dirname(os.path.realpath('__file__'))
-        path = 'media/history.json'
-        self._media_path = os.path.join(fileDir, 'media')
-        self._history_file_path = os.path.join(fileDir, path)
+        self._storage = storage
 
     def start(self) -> None:
-        if not os.path.isdir(self._media_path):
-            os.makedirs(self._media_path)
-
-        self._check_history_file()
-        if self._current_game:
-            self._deck = self._current_game['state']['deck']
-        else:
-            print('Не удалось получить колоду')
-            exit()
+        self._current_game = self._storage.get_current_game()
+        self._deck = self._current_game['state']['deck']
         self._shuffle_cards()
         self._add_card('computer')
         self.notify(
@@ -81,6 +38,8 @@ class Model(Observer):
             self._add_card('human')
         self._computer_move()
         self._calculate_score('human')
+
+        self._storage.update_game_in_history(self._current_game)
 
         if self._is_finished() or payload['action'] == 'Пас':
             self._finish_game()
@@ -95,16 +54,8 @@ class Model(Observer):
         }
 
         self._current_game = finished_game
-        self._update_history(finished_game)
+        self._storage.update_game_in_history(finished_game)
         self.notify(OBSERVER_MESSAGES['finish'], self._current_game)
-
-    def _update_history(self, updated_game: Game) -> None:
-        games = self._read_history_file()
-        games.append(updated_game)
-
-        data = json.dumps(games)
-
-        self._create_file(self._history_file_path, str(data))
 
     def _get_winner(self) -> Optional[GamerType]:
         user_score = self._current_game['state']['human_score']
@@ -152,46 +103,3 @@ class Model(Observer):
     def _shuffle_cards(self) -> None:
         for i in range(1, random.randint(10, 30)):
             random.shuffle(self._deck)
-
-    def _check_history_file(self) -> None:
-        if os.path.isfile(self._history_file_path):
-            with open(self._history_file_path, 'r') as file:
-                jsonData = StringIO(file.read())
-                data = json.load(jsonData)
-                last_game = data[len(data) - 1]
-
-                if last_game['finished']:
-                    self._current_game = self._create_new_game()
-                else:
-                    self._current_game = last_game
-        else:
-            current_game = self._create_new_game()
-            init_data = json.dumps([current_game])
-
-            self._create_file(self._history_file_path, str(init_data))
-            self._current_game = current_game
-
-    def _create_new_game(self) -> Game:
-        return {
-            'game_uuid': uuid4().hex,
-            'events': [],
-            'state': {
-                'computer_cards': [],
-                'human_cards': [],
-                'human_score': 0,
-                'computer_score': 0,
-                'deck': generate_deck()
-            },
-            'winner': None,
-            'finished': False,
-        }
-
-    def _read_history_file(self) -> Any:
-        with open(self._history_file_path, 'r') as file:
-            jsonData = StringIO(file.read())
-            data = json.load(jsonData)
-            return data
-
-    def _create_file(self, path: str, data: str) -> None:
-        with open(path, 'w') as file:
-            file.write(data)
