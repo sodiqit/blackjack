@@ -1,8 +1,16 @@
+from typing import Optional
 import inquirer
-from modules.model.model import Game
+from modules.model.model import Game, GamerType
 from modules.observer.observer import Observer
 from modules.utils.constants import CARDS, OBSERVER_MESSAGES, SUITS, Card
 
+
+def get_winner(gamer_type: Optional[GamerType]) -> str:
+    if gamer_type == 'human':
+        return 'Вы'
+    elif gamer_type == 'computer':
+        return 'Компьютер'
+    return 'Ничья'
 
 class View(Observer):
     def start_game(self) -> None:
@@ -25,6 +33,12 @@ class View(Observer):
         )
 
         self.notify(OBSERVER_MESSAGES['user_action'], answer)
+
+    def render_finish_screen(self, game: Game) -> None:
+        print(
+            f"\nИгра окончена! Победитель: {get_winner(game['winner'])}",
+            f"\nВаше количество очков: {game['state']['human_score']} | Количество очков компьютера: {game['state']['computer_score']}"
+        )
 
     def _get_game_info_message(self, game: Game) -> str:
         user_cards = game['state']['human_cards']

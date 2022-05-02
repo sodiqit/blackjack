@@ -6,12 +6,14 @@ ObserverMessages = TypedDict(
         'init': Literal['INIT'],
         'user_action': Literal['USER_ACTION'],
         'change_state': Literal['CHANGE_STATE'],
+        'finish': Literal['FINISH'],
     }
 )
 SubscribesType = Union[
     Literal['INIT'],
     Literal['USER_ACTION'],
-    Literal['CHANGE_STATE']
+    Literal['CHANGE_STATE'],
+    Literal['FINISH'],
 ]
 
 CardTypes = Union[
@@ -27,7 +29,7 @@ CardTypes = Union[
     Literal['5'],
     Literal['4'],
     Literal['3'],
-    Literal['2']
+    Literal['2'],
 ]
 
 SuitTypes = Union[
@@ -41,7 +43,7 @@ Card = TypedDict(
     'Card',
     {
         'suit': SuitTypes,
-        'type': CardTypes
+        'type': CardTypes,
     }
 )
 
@@ -51,6 +53,7 @@ OBSERVER_MESSAGES: ObserverMessages = {
     'init': 'INIT',
     'user_action': 'USER_ACTION',
     'change_state': 'CHANGE_STATE',
+    'finish': 'FINISH',
 }
 
 CARDS: dict[CardTypes, str] = {
@@ -69,11 +72,27 @@ CARDS: dict[CardTypes, str] = {
     '2': 'Двойка',
 }
 
+MAP_CARDS_FOR_SCORE: dict[CardTypes, int] = {
+    'ace': 11,
+    'king': 10,
+    'queen': 10,
+    'jack': 10,
+    '10': 10,
+    '9': 9,
+    '8': 8,
+    '7': 7,
+    '6': 6,
+    '5': 5,
+    '4': 4,
+    '3': 3,
+    '2': 2,
+}
+
 SUITS: dict[SuitTypes, str] = {
     'diamonds': 'Бубны',
     'hearts': 'Черви',
     'spades': 'Пики',
-    'clubs': 'Трефы'
+    'clubs': 'Трефы',
 }
 
 

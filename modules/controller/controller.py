@@ -14,3 +14,4 @@ class Controller:
         self.view.subscribe(OBSERVER_MESSAGES['init'], self.model.start)
         self.view.subscribe(OBSERVER_MESSAGES['user_action'], self.model.change_state)
         self.model.subscribe(OBSERVER_MESSAGES['change_state'], self.view.render)
+        self.model.subscribe(OBSERVER_MESSAGES['finish'], self.view.render_finish_screen)
