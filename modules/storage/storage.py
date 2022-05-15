@@ -52,9 +52,9 @@ class Storage:
             return current_game
         else:
             current_game = self._create_new_game()
-            init_data = json.dumps([current_game])
+            init_data = json.dumps({'humanBalance': 100, 'computerBalance': 100, 'games': [current_game]})
 
-            self._create_file(self._history_file_path, str(init_data))
+            self._create_history_file(self._history_file_path, init_data)
             return current_game
 
     def has_last_not_ended_game(self) -> bool:
@@ -69,31 +69,27 @@ class Storage:
             return False
 
     def update_game_in_history(self, updated_game: Game) -> None:
-        games = self._read_history_file()
+        body = self._read_history_file()
+        games = body['games']
         games[len(games) - 1] = updated_game
 
-        data = json.dumps(games)
-
-        self._create_file(self._history_file_path, str(data))
+        self._create_history_file(self._history_file_path, json.dumps(body))
 
     def add_game_in_history(self, updated_game: Game) -> None:
-        games = self._read_history_file()
+        body = self._read_history_file()
+        games = body['games']
         games.append(updated_game)
 
-        data = json.dumps(games)
-
-        self._create_file(self._history_file_path, str(data))
+        self._create_history_file(self._history_file_path, json.dumps(body))
 
     def get_all_games(self) -> list[Game]:
-        return self._read_history_file()
+        return self._read_history_file()['games']
 
     def _get_last_game(self) -> Game:
-        with open(self._history_file_path, 'r') as file:
-            jsonData = StringIO(file.read())
-            data = json.load(jsonData)
-            last_game = data[len(data) - 1]
+        body = self._read_history_file()
+        last_game = body['games'][len(body['games']) - 1]
 
-            return last_game
+        return last_game
 
     def _create_new_game(self) -> Game:
         return {
@@ -116,6 +112,6 @@ class Storage:
             data = json.load(jsonData)
             return data
 
-    def _create_file(self, path: str, data: str) -> None:
+    def _create_history_file(self, path: str, data: str) -> None:
         with open(path, 'w') as file:
             file.write(data)
