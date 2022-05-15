@@ -68,15 +68,6 @@ class Storage:
         else:
             return False
 
-
-    def _get_last_game(self) -> Game:
-        with open(self._history_file_path, 'r') as file:
-            jsonData = StringIO(file.read())
-            data = json.load(jsonData)
-            last_game = data[len(data) - 1]
-
-            return last_game
-
     def update_game_in_history(self, updated_game: Game) -> None:
         games = self._read_history_file()
         games[len(games) - 1] = updated_game
@@ -92,6 +83,17 @@ class Storage:
         data = json.dumps(games)
 
         self._create_file(self._history_file_path, str(data))
+
+    def get_all_games(self) -> list[Game]:
+        return self._read_history_file()
+
+    def _get_last_game(self) -> Game:
+        with open(self._history_file_path, 'r') as file:
+            jsonData = StringIO(file.read())
+            data = json.load(jsonData)
+            last_game = data[len(data) - 1]
+
+            return last_game
 
     def _create_new_game(self) -> Game:
         return {

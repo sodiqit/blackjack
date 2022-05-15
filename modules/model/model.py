@@ -12,6 +12,7 @@ ChangeStatePayload = TypedDict(
     }
 )
 
+
 class Model(Observer):
     _storage: Storage
     _current_game: Game
@@ -59,7 +60,20 @@ class Model(Observer):
 
         self._current_game = finished_game
         self._storage.update_game_in_history(finished_game)
-        self.notify(OBSERVER_MESSAGES['finish'], self._current_game)
+        self.notify(
+            OBSERVER_MESSAGES['finish'], 
+            {
+                'game': self._current_game, 
+                'statistics': {
+                    'winrate': self._calculate_statistics()
+                }
+            })
+
+    def _calculate_statistics(self) -> float:
+        games = self._storage.get_all_games()
+        winGames = list(filter(lambda item: item['winner'] == 'human', games))
+        winrate = len(winGames) / len(games)
+        return winrate
 
     def _get_winner(self) -> Optional[GamerType]:
         user_score = self._current_game['state']['human_score']
@@ -81,9 +95,8 @@ class Model(Observer):
 
     def _is_finished(self) -> bool:
         user_score = self._current_game['state']['human_score']
-        computer_score = self._current_game['state']['computer_score']
 
-        return user_score >= 21 or computer_score >= 21
+        return user_score >= 21
 
     def _computer_move(self) -> None:
         score = self._current_game['state']['computer_score']

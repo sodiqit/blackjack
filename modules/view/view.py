@@ -1,4 +1,5 @@
 from typing import Optional
+from typing_extensions import TypedDict
 import inquirer
 from modules.model.model import Game, GamerType
 from modules.observer.observer import Observer
@@ -11,6 +12,15 @@ def get_winner(gamer_type: Optional[GamerType]) -> str:
     elif gamer_type == 'computer':
         return 'Компьютер'
     return 'Ничья'
+
+Statistics = TypedDict('Statistics', {
+    'winrate': float
+})
+
+FinishScreenPayload = TypedDict('FinishScreenPayload', {
+    'game': Game,
+    'statistics': Statistics
+})
 
 class View(Observer):
     def start_game(self) -> None:
@@ -34,11 +44,16 @@ class View(Observer):
 
         self.notify(OBSERVER_MESSAGES['user_action'], answer)
 
-    def render_finish_screen(self, game: Game) -> None:
+    def render_finish_screen(self, payload: FinishScreenPayload) -> None:
+        game = payload['game']
+        statistics = payload['statistics']
         print(
             f"\nИгра окончена! Победитель: {get_winner(game['winner'])}",
             f"\nВаше количество очков: {game['state']['human_score']} | Количество очков компьютера: {game['state']['computer_score']}"
         )
+
+        print(f"Winrate: {float('{:.2f}'.format(statistics['winrate'] * 100))}%")
+
         answer = self._create_prompt(
             'continue',
             message='Хотите сыграть еще раз?',
@@ -48,13 +63,13 @@ class View(Observer):
         if answer['continue'] == 'Нет':
             exit()
         self.notify(OBSERVER_MESSAGES['init'])
-            
+        
 
     def _get_game_info_message(self, game: Game) -> str:
         user_cards = game['state']['human_cards']
-        return f"\nКоличество карт у компьютера: {len(game['state']['computer_cards'])}" + " | " + f"Ваше количество очков: {game['state']['human_score']}" + " | " + f"Ваши карты: {', '.join([self.get_card_info(card) for card in user_cards])}"
+        return f"\nКоличество карт у компьютера: {len(game['state']['computer_cards'])}" + " | " + f"Ваше количество очков: {game['state']['human_score']}" + " | " + f"Ваши карты: {', '.join([self._get_card_info(card) for card in user_cards])}"
 
-    def get_card_info(self, card: Card) -> str:
+    def _get_card_info(self, card: Card) -> str:
         return f"'{CARDS[card['type']]} {SUITS[card['suit']]}'"
 
     def _create_prompt(self, key: str, message: str = '', choices: list = []) -> dict:
