@@ -30,7 +30,8 @@ class Model(Observer):
 
         if not has_last_not_ended_game:
             self._shuffle_cards()
-            self._add_card('computer')
+            self._add_card('computer', 2)
+            self._add_card('human', 2)
             self._storage.update_game_in_history(self._current_game)
 
         self.notify(
@@ -41,8 +42,7 @@ class Model(Observer):
     def change_state(self, payload: ChangeStatePayload) -> None:
         self._computer_move()
         if payload['action'] == 'Взять карту':
-            self._add_card('human')
-        self._calculate_score('human')
+            self._add_card('human', 1)
 
         self._storage.update_game_in_history(self._current_game)
 
@@ -101,10 +101,8 @@ class Model(Observer):
     def _computer_move(self) -> None:
         score = self._current_game['state']['computer_score']
 
-        if score < 16:
-            self._add_card('computer')
-
-        self._calculate_score('computer')
+        if score < 17:
+            self._add_card('computer', 1)
 
     def _calculate_score(self, gamer_type: GamerType) -> None:
         cards: List[Card] = self._current_game['state'][f'{gamer_type}_cards'] # type: ignore
@@ -113,9 +111,11 @@ class Model(Observer):
             result += MAP_CARDS_FOR_SCORE[card['type']]
         self._current_game['state'][f'{gamer_type}_score'] = result # type: ignore
 
-    def _add_card(self, gamer_type: GamerType) -> None:
-        card = self._deck.pop()
-        self._current_game['state'][f'{gamer_type}_cards'].append(card)  # type: ignore
+    def _add_card(self, gamer_type: GamerType, count: int) -> None:
+        for i in range(count):
+            card = self._deck.pop()
+            self._current_game['state'][f'{gamer_type}_cards'].append(card)  # type: ignore
+            self._calculate_score(gamer_type)
 
     def _shuffle_cards(self) -> None:
         for i in range(1, random.randint(10, 30)):
