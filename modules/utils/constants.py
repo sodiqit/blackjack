@@ -7,6 +7,7 @@ ObserverMessages = TypedDict(
         'user_action': Literal['USER_ACTION'],
         'change_state': Literal['CHANGE_STATE'],
         'finish': Literal['FINISH'],
+        'restart': Literal['RESTART'],
     }
 )
 SubscribesType = Union[
@@ -14,6 +15,7 @@ SubscribesType = Union[
     Literal['USER_ACTION'],
     Literal['CHANGE_STATE'],
     Literal['FINISH'],
+    Literal['RESTART'],
 ]
 
 CardTypes = Union[
@@ -54,6 +56,7 @@ OBSERVER_MESSAGES: ObserverMessages = {
     'user_action': 'USER_ACTION',
     'change_state': 'CHANGE_STATE',
     'finish': 'FINISH',
+    'restart': 'RESTART'
 }
 
 CARDS: dict[CardTypes, str] = {

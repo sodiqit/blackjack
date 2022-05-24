@@ -30,6 +30,12 @@ Game = TypedDict(
     }
 )
 
+Balance = TypedDict('Balance', {
+    'human': int, 
+    'computer': int,
+    'freeze_human_balance': int,
+})
+
 class Storage:
     def __init__(self) -> None:
         fileDir = os.path.dirname(os.path.realpath('__file__'))
@@ -52,7 +58,7 @@ class Storage:
             return current_game
         else:
             current_game = self._create_new_game()
-            init_data = json.dumps({'humanBalance': 100, 'computerBalance': 100, 'games': [current_game]})
+            init_data = json.dumps({'balance': self.get_default_balance(), 'games': [current_game]})
 
             self._create_history_file(self._history_file_path, init_data)
             return current_game
@@ -81,6 +87,24 @@ class Storage:
         games.append(updated_game)
 
         self._create_history_file(self._history_file_path, json.dumps(body))
+
+    def remove_history_file(self) -> None:
+        if os.path.isfile(self._history_file_path):
+            os.remove(self._history_file_path)
+
+    def get_default_balance(self) -> Balance: 
+        return { 'human': 100, 'computer': 500, 'freeze_human_balance': 0, }
+
+    def update_balance(self, payload: Balance) -> None: 
+        data = self._read_history_file()
+
+        updated_data = { **data, 'balance': payload }
+
+        self._create_history_file(self._history_file_path, json.dumps(updated_data))
+
+    def get_balance(self) -> Balance:
+        body = self._read_history_file()
+        return body['balance']
 
     def get_all_games(self) -> list[Game]:
         return self._read_history_file()['games']
